@@ -7,4 +7,4 @@ logic before we build anything fancy.
 ## The greet() function
 
 `hello.py` has a function called `greet(name)` that returns the string
-`"Hello, {name}!"`.
+`"Greetings, {name}! Welcome aboard."`.
