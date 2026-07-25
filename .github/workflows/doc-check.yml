@@ -1,0 +1,48 @@
+name: Self-Healing Docs Check
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install anthropic python-dotenv
+
+      - name: Run doc staleness check
+        id: check
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/ci_check.py \
+            "origin/${{ github.event.pull_request.base.ref }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            stale_report.md
+
+          if [ -s stale_report.md ]; then
+            echo "found_stale=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found_stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post PR comment if docs look stale
+        if: ${{ steps.check.outputs.found_stale == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file stale_report.md
