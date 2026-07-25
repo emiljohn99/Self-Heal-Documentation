@@ -1,0 +1,5 @@
+{
+  "src/example/hello.py": [
+    { "doc": "docs/example.md", "section": "The greet() function" }
+  ]
+}
